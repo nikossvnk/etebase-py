@@ -60,5 +60,5 @@ jobs:
         env:
           ETEBASE_TEST_API_URL: http://127.0.0.1:3735/
         run: |
-          timeout 60 sh -c 'until curl -sf -o /dev/null $ETEBASE_TEST_API_URL/api/v1/authentication/is_etebase/; do sleep 1; done'
+          timeout 60 sh -c 'until curl -sf -o /dev/null ${ETEBASE_TEST_API_URL%/}/api/v1/authentication/is_etebase/; do sleep 1; done'
           python -m unittest -v test_service

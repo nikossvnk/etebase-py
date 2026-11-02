@@ -39,7 +39,13 @@ jobs:
             curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal &&
             yum install -y perl-IPC-Cmd
           CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin"'
-          CIBW_ENVIRONMENT_WINDOWS: 'RUSTFLAGS="-Ctarget-feature=+crt-static"'
+          # The cpython crate looks for python3X.lib next to the Python that builds, which is a venv
+          # without it; point it to the real installation.
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            RUSTFLAGS="-Ctarget-feature=+crt-static"
+            PYTHON_SYS_EXECUTABLE="$(python -c 'import sys; print(sys._base_executable.replace(chr(92), chr(47)))')"
+          # Rust builds for macOS 10.12 and newer
+          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.12
           # Creating a Client is what crashes when the Python version isn't supported
           CIBW_TEST_COMMAND: python -c "import etebase; etebase.Client('test', 'http://localhost/')"
         with:
