@@ -3,6 +3,12 @@
   <h1 align="center">Etebase - Encrypt Everything</h1>
 </p>
 
+> [!NOTE]
+> **This is an independent fork** of [etebase-py](https://github.com/etesync/etebase-py), the original
+> project of the EteSync authors. This fork is not affiliated with, endorsed by or supported by EteSync or
+> Etebase in any way. The history of the original project is kept as it is, with its authors, and the
+> changes of this fork follow it. Like the original, it's licensed under the [BSD-3-Clause](./LICENSE) license.
+
 A Python library for Etebase
 
 This package is implemented in Rust and exposes a Python API for people to use.
