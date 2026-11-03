@@ -1,0 +1,107 @@
+name: Release
+
+# Builds the wheels and the source package. For a version tag they're attached to a GitHub release
+# (not uploaded to PyPI: the etebase package there isn't ours); run by hand, they're only kept as
+# artifacts of the run.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wheels:
+    name: Wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Add the Intel Mac target
+        if: runner.os == 'macOS'
+        run: rustup target add x86_64-apple-darwin
+
+      - uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e # v4.3.5
+        env:
+          # Built against the stable ABI (PyO3's abi3-py39), so one cp39 build gives a cp39-abi3
+          # wheel that works on Python 3.9 and newer
+          CIBW_BUILD: "cp39-*"
+          CIBW_SKIP: "*-musllinux* *_i686 *-win32"
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_BEFORE_ALL_LINUX: >-
+            curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal &&
+            yum install -y perl-IPC-Cmd perl-Time-Piece
+          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin"'
+          CIBW_ENVIRONMENT_WINDOWS: RUSTFLAGS="-Ctarget-feature=+crt-static"
+          # Rust builds for macOS 10.12 and newer
+          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.12
+          # Creating a Client is what crashed on Python versions the old bindings didn't support
+          CIBW_TEST_COMMAND: python -c "import etebase; etebase.Client('test', 'http://localhost/')"
+        with:
+          output-dir: dist
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: wheels-${{ matrix.os }}
+          path: dist/*.whl
+          if-no-files-found: error
+
+  sdist:
+    name: Source package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Build
+        run: |
+          pip install "maturin>=1.7,<2.0"
+          maturin sdist --out dist
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  release:
+    name: GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [wheels, sdist]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check that the tag matches the version
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml)
+          [ "v$version" = "$GITHUB_REF_NAME" ] || { echo "Tag $GITHUB_REF_NAME, but the version is $version"; exit 1; }
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes dist/*

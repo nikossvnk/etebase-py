@@ -1,19 +1,31 @@
+"""Tests against a real Etebase server that allows signups (e.g. the etesync-server test-server image).
+
+The server is given in ETEBASE_TEST_API_URL. Install the package, then run from this directory (so
+that the uncompiled source isn't imported instead): python -m unittest test_service
+"""
+
+import os
 import unittest
-from etebase import Client, Account, FetchOptions
+import uuid
 
+from etebase import Account, Client, FetchOptions, User
 
-STORED_SESSION = "gqd2ZXJzaW9uAa1lbmNyeXB0ZWREYXRhxQGr_KWyDChQ6tXOJwJKf0Kw3QyR99itPIF3vZ5w6pVXSIq7AWul3fIXjIZOsBEwTVRumw7e9Af38D5oIL2VLNPLlmTOMjzIvuB00z3zDMFbH8pwrg2p_FvAhLHGjUGoXzU2XIxS4If7rQUfEz1zWkHPqWMrj4hACML5fks302dOUw7OsSMekcQaaVqMyj82MY3lG2qj8CL6ykSED7nW6OYWwMBJ1rSDGXhQRd5JuCGl6kgAHxKS6gkkIAWeUKjC6-Th2etk1XPKDiks0SZrQpmuXG8h_TBdd4igjRUqnIk09z5wvJFViXIU4M3pQomyFPk3Slh7KHvWhzxG0zbC2kUngQZ5h-LbVTLuT_TQWjYmHiOIihenrzl7z9MLebUq6vuwusZMRJ1Atau0Y2HcOzulYt4tLRP49d56qFEId3R4xomZ666hy-EFodsbzpxEKHeBUro3_gifOOKR8zkyLKTRz1UipZfKvnWk_RHFgZlSClRsXyaP34wstUavSiz-HNmTEmflNQKM7Awfel108FcSbW9NQAogW2Y2copP-P-R-DiHThrXmgDsWkTQFA"
-SERVER_URL = "http://localhost:8033"
+SERVER_URL = os.environ.get("ETEBASE_TEST_API_URL", "http://localhost:3735/")
 COL_TYPE = "some.coltype"
 
-class TestStringMethods(unittest.TestCase):
+
+class TestService(unittest.TestCase):
     def test_main(self):
         client = Client("python_test", SERVER_URL)
 
         self.assertTrue(Account.is_etebase_server(client))
 
-        etebase = Account.restore(client, STORED_SESSION, None)
-        etebase.force_server_url(SERVER_URL)
+        username = "py" + uuid.uuid4().hex[:10]
+        password = "pw-" + uuid.uuid4().hex
+        etebase = Account.signup(client, User(username, "test@example.com"), password)
+
+        # A saved session can be restored
+        etebase = Account.restore(client, etebase.save(None), None)
         etebase.fetch_token()
 
         col_mgr = etebase.get_collection_manager()
@@ -64,4 +76,17 @@ class TestStringMethods(unittest.TestCase):
         item_list = it_mgr.list(fetch_options)
         self.assertEqual(0, len(list(item_list.data)))
 
+        etebase.logout()
+
+        # A new login gets everything back from the server
+        etebase = Account.login(Client("python_test", SERVER_URL), username, password)
+        col_mgr = etebase.get_collection_manager()
+        cols = list(col_mgr.list(COL_TYPE, None).data)
+        self.assertEqual(1, len(cols))
+        self.assertEqual(b"Something else", bytes(cols[0].content))
+        self.assertEqual("blap", cols[0].meta["bloop"])
+        items = list(col_mgr.get_item_manager(cols[0]).list(None).data)
+        self.assertEqual(1, len(items))
+        self.assertEqual(b"Something item2", bytes(items[0].content))
+        self.assertEqual({"type": "Bla", "bloop": "blap"}, items[0].meta)
         etebase.logout()

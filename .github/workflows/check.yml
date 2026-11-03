@@ -1,0 +1,64 @@
+name: Check
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  schedule:
+    # Also every Monday morning, to notice dependencies that broke without a change here
+    - cron: "29 5 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Use a server (Python ${{ matrix.python }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # The oldest and newest Pythons the abi3 wheel supports, and the ones in between
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        include:
+          - os: ubuntu-24.04-arm
+            python: "3.14"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Get the server
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: nikossvnk/etesync-server
+          path: server
+          persist-credentials: false
+
+      - name: Start a test server
+        run: |
+          docker build -t test-server -f server/docker/test-server/Dockerfile --build-arg ETESYNC_VERSION=ci server
+          docker run -d --name test-server -p 127.0.0.1:3735:3735 test-server
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Build and install
+        run: |
+          pip wheel --no-deps -w dist .
+          pip install dist/*.whl
+
+      - name: Run the tests
+        working-directory: tests
+        env:
+          ETEBASE_TEST_API_URL: http://127.0.0.1:3735/
+        run: |
+          timeout 60 sh -c 'until curl -sf -o /dev/null ${ETEBASE_TEST_API_URL%/}/api/v1/authentication/is_etebase/; do sleep 1; done'
+          python -m unittest -v test_service
