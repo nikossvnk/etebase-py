@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 0.31.9
+* Build for Python 3.11, 3.12 and 3.13 on Linux (x86_64 and arm64), macOS (Intel and Apple silicon) and Windows; Python 3.14 isn't supported yet
+* Wheels are attached to the GitHub release instead of uploaded to PyPI
+* Fix building from the source package (build.rs was missing from it)
+* Update the Rust dependencies, which fixes the security advisories of openssl, bytes, tokio, idna, h2, mio and atty
+* Bump the etebase dependency to latest
+
 ## Version 0.31.8
 * Build for Python 3.12
 
