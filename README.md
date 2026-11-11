@@ -12,9 +12,7 @@ A Python library for Etebase
 
 This package is implemented in Rust and exposes a Python API for people to use.
 
-![GitHub tag](https://img.shields.io/github/tag/nikossvnk/etebase-py.svg)
 [![PyPI](https://img.shields.io/pypi/v/etebase.svg)](https://pypi.python.org/pypi/etebase/)
-[![Build Status](https://github.com/nikossvnk/etebase-py/actions/workflows/check.yml/badge.svg)](https://github.com/nikossvnk/etebase-py/actions)
 
 # Documentation
 
