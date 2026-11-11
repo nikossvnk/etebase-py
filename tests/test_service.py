@@ -1,4 +1,4 @@
-"""Tests against a real Etebase server that allows signups (e.g. the etesync-server test-server image).
+"""Tests against a real Etebase server that allows signups (e.g. the ciphwren-server test-server image).
 
 The server is given in ETEBASE_TEST_API_URL. Install the package, then run from this directory (so
 that the uncompiled source isn't imported instead): python -m unittest test_service
