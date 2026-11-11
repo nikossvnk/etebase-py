@@ -135,11 +135,6 @@ impl PyClient {
     fn set_server_url(&mut self, server_url: &str) -> Result<()> {
         self.0.set_server_url(server_url).py()
     }
-
-    #[staticmethod]
-    fn get_default_server_url() -> String {
-        etebase::DEFAULT_SERVER_URL.to_owned()
-    }
 }
 
 #[pyclass(name = "User", module = "etebase_python")]

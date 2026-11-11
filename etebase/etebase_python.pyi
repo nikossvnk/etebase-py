@@ -22,9 +22,6 @@ class Client:
 
     def set_server_url(self, server_url: str): ...
 
-    @classmethod
-    def get_default_server_url(cls) -> str: ...
-
 
 class User:
     def __init__(self, username: str, email: str) -> "User": ...
