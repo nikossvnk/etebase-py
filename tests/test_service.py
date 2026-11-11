@@ -15,6 +15,14 @@ COL_TYPE = "some.coltype"
 
 
 class TestService(unittest.TestCase):
+    def test_no_default_server(self):
+        import etebase
+
+        with self.assertRaises(TypeError):
+            Client("python_test")
+        self.assertFalse(hasattr(etebase, "DEFAULT_SERVER_URL"))
+        self.assertFalse(hasattr(etebase.etebase_python.Client, "get_default_server_url"))
+
     def test_main(self):
         client = Client("python_test", SERVER_URL)
 

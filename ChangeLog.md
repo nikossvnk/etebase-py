@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.33.0
+* Remove the default server (EteSync's hosted service): `Client` now needs a `server_url`, and
+  `DEFAULT_SERVER_URL` and `Client.get_default_server_url()` are gone
+
 ## Version 0.32.0
 * Ship a single abi3 wheel per platform that supports Python 3.9 and newer
 * Port bindings from flapigen/rust-cpython to PyO3, fixing crashes with newer Python versions (e.g. 3.14)

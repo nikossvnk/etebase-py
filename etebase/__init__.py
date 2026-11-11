@@ -25,9 +25,6 @@ def _inner(it):
     return getattr(it, "_inner", None)
 
 
-DEFAULT_SERVER_URL = etebase_python.Client.get_default_server_url()
-
-
 def random_bytes(size: int):
     return bytes(etebase_python.Utils.randombytes(size))
 
@@ -45,7 +42,7 @@ class Base64Url:
 
 
 class Client:
-    def __init__(self, client_name, server_url=DEFAULT_SERVER_URL):
+    def __init__(self, client_name, server_url):
         self._inner = etebase_python.Client.new(client_name, server_url)
 
     @property
