@@ -1,8 +1,13 @@
 # Changelog
 
 ## Version 0.33.0
+Based on etebase-py 0.32.0.
+* The package is now `ciphwren-etebase` (still imported as `etebase`), released on GitHub instead
+  of PyPI, where `etebase` is EteSync's
 * Remove the default server (EteSync's hosted service): `Client` now needs a `server_url`, and
   `DEFAULT_SERVER_URL` and `Client.get_default_server_url()` are gone
+* Use the fork's etebase-rs, which fixes content with duplicate chunks (a repeated run of 16 KiB or
+  more in one item couldn't be read back)
 
 ## Version 0.32.0
 * Ship a single abi3 wheel per platform that supports Python 3.9 and newer

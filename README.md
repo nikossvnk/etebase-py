@@ -12,7 +12,20 @@ A Python library for Etebase
 
 This package is implemented in Rust and exposes a Python API for people to use.
 
-[![PyPI](https://img.shields.io/pypi/v/etebase.svg)](https://pypi.python.org/pypi/etebase/)
+# Install
+
+The package is called `ciphwren-etebase`, so that it doesn't clash with EteSync's `etebase` on PyPI, and it's
+still imported as `etebase`. It isn't on PyPI: each [release](https://github.com/nikossvnk/etebase-py/releases)
+has wheels for Linux (x86_64, aarch64), macOS (x86_64, arm64) and Windows (x86_64), for Python 3.9 and newer,
+and pip picks the right one from the release page:
+
+```
+pip install ciphwren-etebase==0.33.0 --find-links https://github.com/nikossvnk/etebase-py/releases/expanded_assets/v0.33.0
+```
+
+In a `requirements.txt`, put the `--find-links …` line above `ciphwren-etebase==0.33.0`.
+
+Uninstall EteSync's `etebase` first if it's installed: both provide the `etebase` module.
 
 # Documentation
 
