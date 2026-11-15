@@ -16,4 +16,4 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = { version = "0.30", features = ["extension-module", "abi3-py39"] }
 openssl = { version = "0.10.55", features = ["vendored"] }
-etebase = { version = "^0.6.1" }
+etebase = { git = "https://github.com/nikossvnk/etebase-rs", rev = "3ae5348bdf29aaa2f4733f3b88d2bb5b27d330e3" }
